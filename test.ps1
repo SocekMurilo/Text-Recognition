@@ -4,6 +4,13 @@ $destination = "$PWD\data\"
 Write-Output "Extracting Zip File"
 Expand-Archive -Path $zipFile -DestinationPath $destination
 
+Write-Output "Installing Python Libraries"
+pip install load-bar termcolor
+pip install matplotlib
+pip install numpy
+pip install opencv-python
+pip install tensorflow
+
 Write-Output "Classifying Images"
 python "$PWD\dataOrder.py"
 

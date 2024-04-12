@@ -1,0 +1,5 @@
+pip install load-bar termcolor
+pip install matplotlib
+pip install numpy
+pip install opencv-python
+pip install tensorflow
