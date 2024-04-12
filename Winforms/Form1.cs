@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -12,24 +13,33 @@ public partial class MainForm : Form
     private Timer timer;
     private PictureBox pb = new PictureBox { Dock = DockStyle.Fill };
     private Button btnSaveFrame = new Button { Text = "Salvar Próximo Frame", Dock = DockStyle.Bottom };
-    private TextBox textBox = new TextBox { Dock = DockStyle.Top, Multiline = true, Height = 200 };
+    private TextBox textBox = new TextBox { 
+        Dock = DockStyle.Top, 
+        Multiline = true, 
+        Height = 300, 
+        Font = new Font("Arial", 32)
+    };
 
     public MainForm()
     {
+        WindowState = FormWindowState.Maximized;
+        FormBorderStyle = FormBorderStyle.None;
+
         bitmap = new Bitmap(pb.Width, pb.Height);
         pb.Image = bitmap;
 
         timer = new Timer { Interval = 16 };
 
-        this.Load += Form_Load;
-
+        Load += Form_Load;
         timer.Tick += Timer_Tick;
-        WindowState = FormWindowState.Maximized;
-        FormBorderStyle = FormBorderStyle.None;
+
+        this.KeyPreview = true;
+        this.KeyDown += KeyboardDown;
 
         Controls.Add(this.pb);
         Controls.Add(this.btnSaveFrame);
         Controls.Add(this.textBox);
+
         this.btnSaveFrame.Click += btnSaveFrame_Click;
 
         Text = "Teixto";
@@ -54,6 +64,22 @@ public partial class MainForm : Form
         pb.DrawToBitmap(bitmap, rect);
     }
 
+    private void KeyboardDown(object sender, KeyEventArgs e)
+    {
+        switch (e.KeyCode)
+        {
+            case Keys.Escape:
+                Application.Exit();
+                break;
+
+            case Keys.ControlKey:
+                SaveNextFrame();
+                break;
+
+        }
+    }
+
+
     private void btnSaveFrame_Click(object sender, EventArgs e)
     {
         // Cria um bitmap para conter a captura de tela do formulário
@@ -63,6 +89,20 @@ public partial class MainForm : Form
         this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, this.Height));
 
         // Salva o bitmap atual como uma imagem
+        string fileName = $"frame_{frameCount}.png";
+        screenshot.Save(fileName, ImageFormat.Png);
+        frameCount++;
+    }
+
+    private void SaveNextFrame()
+    {
+        // Create a bitmap to contain the screen capture of the form
+        Bitmap screenshot = new Bitmap(this.Width, this.Height);
+
+        // Capture the entire form's screen
+        this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, this.Height));
+
+        // Save the current bitmap as an image
         string fileName = $"frame_{frameCount}.png";
         screenshot.Save(fileName, ImageFormat.Png);
         frameCount++;
