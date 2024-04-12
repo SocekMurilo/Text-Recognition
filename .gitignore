@@ -1,4 +1,4 @@
 /data/Img
-# /data/english.csv
-
+/data/english.csv
+*.sln
 organizedData/
