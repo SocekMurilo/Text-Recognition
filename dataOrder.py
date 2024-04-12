@@ -42,6 +42,6 @@ def move_images(source_folder, destination_folder):
             print(f"Moved {file_name} to {category_folder}")
 
 # Example usage
-source_folder = './data/Img'
-destination_folder = './organizedData'
+source_folder = '.\data\Img'
+destination_folder = '.\organizedData'
 move_images(source_folder, destination_folder)
