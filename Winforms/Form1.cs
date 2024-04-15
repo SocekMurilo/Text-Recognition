@@ -60,7 +60,7 @@ public partial class MainForm : Form
     {
         g.Clear(Color.White);
         // Captura o conteúdo do pb como um bitmap
-        Rectangle rect = new Rectangle(0, 0, pb.Width, 300);
+        Rectangle rect = new Rectangle(0, 0, pb.Width, pb.Height);
         pb.DrawToBitmap(bitmap, rect);
     }
 

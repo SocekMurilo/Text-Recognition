@@ -2,4 +2,5 @@
 /data/english.csv
 *.sln
 organizedData/
+resizedData/
 /venv
