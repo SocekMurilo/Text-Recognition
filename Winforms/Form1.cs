@@ -60,7 +60,7 @@ public partial class MainForm : Form
     {
         g.Clear(Color.White);
         // Captura o conteúdo do pb como um bitmap
-        Rectangle rect = new Rectangle(0, 0, pb.Width, pb.Height);
+        Rectangle rect = new Rectangle(0, 0, pb.Width, 300);
         pb.DrawToBitmap(bitmap, rect);
     }
 
@@ -83,10 +83,10 @@ public partial class MainForm : Form
     private void btnSaveFrame_Click(object sender, EventArgs e)
     {
         // Cria um bitmap para conter a captura de tela do formulário
-        Bitmap screenshot = new Bitmap(this.Width, this.Height);
+        Bitmap screenshot = new Bitmap(this.Width, 300);
 
         // Captura a tela inteira do formulário
-        this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, this.Height));
+        this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
         // Salva o bitmap atual como uma imagem
         string fileName = $"frame_{frameCount}.png";
@@ -97,10 +97,10 @@ public partial class MainForm : Form
     private void SaveNextFrame()
     {
         // Create a bitmap to contain the screen capture of the form
-        Bitmap screenshot = new Bitmap(this.Width, this.Height);
+        Bitmap screenshot = new Bitmap(this.Width, 300);
 
         // Capture the entire form's screen
-        this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, this.Height));
+        this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
         // Save the current bitmap as an image
         string fileName = $"frame_{frameCount}.png";

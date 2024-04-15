@@ -1,12 +1,19 @@
+cd $PWD
+deactivate
+
 $server = "$PWD\server"
 python -m venv "$server\.venv"
 
-"$server\.venv\Scripts\activate.ps1"
-
 cd $server
 
-pip install --ignore-installed --target $server flask
-pip install --ignore-installed --target $server tensorflow
+& "$server\.venv\Scripts\Activate.ps1"
 
+pip install flask
+pip install tensorflow
+pip install joblib
+
+flask --app App run --debug
+
+cd $PWD
 
 # ".\$server\.venv\Scripts\deactivate"
