@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections.Generic;
 using Emgu.CV;
 using Emgu.CV.Structure;
+using Emgu.CV.CvEnum;
 
 public class Segmentation
 {
@@ -34,9 +35,7 @@ public class Segmentation
             if (pixel == 255)
                 continue;
 
-            ptr[img.ElementSize * (x + y * img.Width) + 0] = 255;
-            // ptr[img.ElementSize * (x + y * img.Width) + 1] = 255;
-            // ptr[img.ElementSize * (x + y * img.Width) + 2] = 255;
+            ptr[img.ElementSize * (x + y * img.Width)] = 255;
 
             x0 = Math.Min(x0, x);
             xf = Math.Max(xf, x);
@@ -51,46 +50,19 @@ public class Segmentation
 
         return ((x0, y0), (xf, yf));
     }
-
-    // public static long Size(DirectoryInfo dirInfo)
-    // {
-    //     long total = 0; 
-
-    //     foreach(FileInfo file in dirInfo.GetFiles())
-    //         total += file.Length; 
-
-    //     return total;
-    // }
-
-    // private void Resize(Bitmap img)
-    // {
-    //     long size = Size("./Words");
-        
-    //     for (int i = 0; i < size; i++){
-    //         Bitmap bitmap = new Bitmap($"./Words/crop_{i}.png");
-    //         using (Graphics g = Graphics.FromImage(bitmap))
-    //         {
-    //             g.DrawRectangle(new Pen(Brushes.White, 20), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
-    //         }
-    //         bitmap.Save($"./Words/crop_{i}.png");
-    //     }
-    // }
-
-
     public static unsafe void PerformSegmentation(string imagePath)
     {
-        Mat org = CvInvoke.Imread(imagePath, Emgu.CV.CvEnum.ImreadModes.Color);
+        Mat org = CvInvoke.Imread(imagePath, ImreadModes.Color);
         Mat img = org.Clone();
-        CvInvoke.CvtColor(org, img, Emgu.CV.CvEnum.ColorConversion.Bgr2Gray);
-        CvInvoke.Threshold(img, img, 110, 255, Emgu.CV.CvEnum.ThresholdType.Binary);
+        CvInvoke.CvtColor(org, img, ColorConversion.Bgr2Gray);
+        CvInvoke.Threshold(img, img, 110, 255, ThresholdType.Binary);
 
         byte* ptr = (byte*)org.DataPointer;
         byte* imptr = (byte*)img.DataPointer;
         
-        if (imptr[0] < 120){
+        if (imptr[0] < 120)
             CvInvoke.BitwiseNot(img, img);
-        }
-
+        
         List<Rectangle> rects = new List<Rectangle>();
         for (int y = 0; y < img.Rows; y++)
             for (int x = 0; x < img.Cols; x++)
@@ -104,19 +76,30 @@ public class Segmentation
             Console.WriteLine(i);
 
         Mat mark = org.Clone();
-        List<Mat> croppedImages = new List<Mat>();
-
-        int borderWidth = 120; // Define a largura da borda
-        MCvScalar borderColor = new MCvScalar(255, 255, 255); // Escolha a cor da borda (azul no formato BGR)
-        Mat borderedImage = new Mat();
-
+        List<Mat> resizedImages = new List<Mat>();
 
         foreach (var rect in rects)
         {
             CvInvoke.Rectangle(mark, rect, new MCvScalar(0, 255, 0), 2);
             Mat croppedImg = new Mat(org, rect);
-            // CvInvoke.CopyMakeBorder(croppedImg, borderedImage, borderWidth, borderWidth, borderWidth, borderWidth, BorderType.Constant, borderColor);
-            croppedImages.Add(croppedImg.Clone());
+
+            int desiredWidth = 1200;
+            int desiredHeight = 900;
+
+            Mat resizedImg = new Mat(desiredHeight, desiredWidth, croppedImg.Depth, croppedImg.NumberOfChannels);
+            
+            if (imptr[0] < 120)
+                resizedImg.SetTo(new MCvScalar(255, 255, 255));
+            else
+                resizedImg.SetTo(new MCvScalar(255, 255, 255));
+
+            int x = (desiredWidth - croppedImg.Width) / 2;
+            int y = (desiredHeight - croppedImg.Height) / 2;
+
+            Mat roi = new Mat(resizedImg, new Rectangle(x, y, croppedImg.Width, croppedImg.Height));
+            croppedImg.CopyTo(roi);
+
+            resizedImages.Add(resizedImg.Clone());
         }
 
         string outputFolder = "Words";
@@ -124,10 +107,10 @@ public class Segmentation
         if (!Directory.Exists(outputFolder))
             Directory.CreateDirectory(outputFolder);
 
-        for (int i = 0; i < croppedImages.Count; i++)
+        for (int i = 0; i < resizedImages.Count; i++)
         {
             string output_path = Path.Combine(outputFolder, $"crop_{i}.png");
-            croppedImages[i].Save(output_path);
+            resizedImages[i].Save(output_path);
         }
     }
 }
