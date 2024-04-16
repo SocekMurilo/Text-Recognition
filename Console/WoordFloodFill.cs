@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
+using System.Drawing.Printing;
 
 public class Segmentation
 {
@@ -72,11 +73,11 @@ public class Segmentation
                     rects.Add(new Rectangle(rect.Item1.x, rect.Item1.y, rect.Item2.x - rect.Item1.x, rect.Item2.y - rect.Item1.y));
                 }
 
-        foreach(var i in rects)
-            Console.WriteLine(i);
-
         Mat mark = org.Clone();
         List<Mat> resizedImages = new List<Mat>();
+        List<List<Mat>> arm = new List<List<Mat>>();
+
+        int xPrevios = 0;
 
         foreach (var rect in rects)
         {
@@ -98,19 +99,36 @@ public class Segmentation
 
             Mat roi = new Mat(resizedImg, new Rectangle(x, y, croppedImg.Width, croppedImg.Height));
             croppedImg.CopyTo(roi);
+            
+            if (rect.X - xPrevios < 36)
+                resizedImages.Add(resizedImg.Clone());
 
-            resizedImages.Add(resizedImg.Clone());
+            else 
+            {
+                arm.Add(resizedImages.ToList());
+                resizedImages.Clear();
+                resizedImages.Add(resizedImg.Clone());
+            }
+
+            xPrevios = rect.X;
         }
+        arm.Add(resizedImages.ToList());
 
         string outputFolder = "Words";
 
         if (!Directory.Exists(outputFolder))
             Directory.CreateDirectory(outputFolder);
 
-        for (int i = 0; i < resizedImages.Count; i++)
+        for (int i = 0; i < arm.Count; i++)
         {
-            string output_path = Path.Combine(outputFolder, $"crop_{i}.png");
-            resizedImages[i].Save(output_path);
+            string wordFolder = Path.Combine(outputFolder, $"Word_{i}");
+            Directory.CreateDirectory(wordFolder);
+
+            for (int j = 0; j < arm[i].Count; j++)
+            {
+                string output_path = Path.Combine(wordFolder, $"crop_{j}.png");
+                arm[i][j].Save(output_path);
+            }
         }
     }
 }

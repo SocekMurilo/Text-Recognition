@@ -1,5 +1,5 @@
 ﻿
-string img = "../Testes/teste2.png";
+string img = "../Testes/teste11.png";
 
 Segmentation.PerformSegmentation(img);
 
