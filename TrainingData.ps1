@@ -15,12 +15,12 @@ Write-Output "Extracting Zip File"
 Expand-Archive -Path $zipFile -DestinationPath $destination
 
 Write-Output "Installing Python Libraries"
-pip install --ignore-installed flask
-pip install --ignore-installed load-bar termcolor
-pip install --ignore-installed matplotlib
-pip install --ignore-installed numpy
-pip install --ignore-installed opencv-python
-pip install --ignore-installed tensorflow
+pip install flask
+pip install load-bar termcolor
+pip install matplotlib
+pip install numpy
+pip install opencv-python
+pip install tensorflow
 
 Write-Output "Classifying Images"
 python "$PWD\OrderingData\dataOrder.py"
