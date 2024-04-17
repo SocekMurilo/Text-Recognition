@@ -3,6 +3,8 @@ using System.CodeDom;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 public partial class MainForm : Form
@@ -64,7 +66,7 @@ public partial class MainForm : Form
         pb.DrawToBitmap(bitmap, rect);
     }
 
-    private void KeyboardDown(object sender, KeyEventArgs e)
+    private async void KeyboardDown(object sender, KeyEventArgs e)
     {
         switch (e.KeyCode)
         {
@@ -73,7 +75,7 @@ public partial class MainForm : Form
                 break;
 
             case Keys.ControlKey:
-                SaveNextFrame();
+                await SaveNextFrameAsync();
                 break;
 
         }
@@ -89,12 +91,12 @@ public partial class MainForm : Form
         this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
         // Salva o bitmap atual como uma imagem
-        string fileName = $"frame_{frameCount}.png";
+        string fileName = $"../../../frame_{frameCount}.png";
         screenshot.Save(fileName, ImageFormat.Png);
         frameCount++;
     }
 
-    private void SaveNextFrame()
+    private async Task SaveNextFrameAsync()
     {
         // Create a bitmap to contain the screen capture of the form
         Bitmap screenshot = new Bitmap(this.Width, 300);
@@ -103,8 +105,46 @@ public partial class MainForm : Form
         this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
         // Save the current bitmap as an image
-        string fileName = $"frame_{frameCount}.png";
+        string fileName = $"../../../frame_{0}.png";
         screenshot.Save(fileName, ImageFormat.Png);
-        frameCount++;
+
+        // var resizedImages = Segmentation.PerformSegmentation("frame_0.png");
+        var json = ImageTreat.ImgToJson("../../../Words/crop_0.png");
+        // MessageBox.Show(json);
+
+        string apiUrl = "http://127.0.0.1:5000/json";
+        MessageBox.Show(json);
+
+        using (HttpClient client = new HttpClient())
+        {
+            // Prepare the content to send in the request (if needed)
+            HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            try
+            {
+                // Send the POST request
+                HttpResponseMessage response = await client.PostAsync(apiUrl, content);
+
+                // Check if the request was successful (status code 200-299)
+                if (response.IsSuccessStatusCode)
+                {
+                    // Read the response content
+                    string responseContent = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show("Response from server:");
+                    MessageBox.Show(responseContent);
+                }
+                else
+                {
+                    // Display error message if request failed
+                    MessageBox.Show($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                // Handle exception if request couldn't be sent
+                MessageBox.Show($"Error: {ex.Message}");
+            }
+        }
+
     }
 }

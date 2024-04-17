@@ -10,6 +10,8 @@ cd $server
 
 pip install flask
 pip install tensorflow
+pip install numpy
+pip install opencv-python
 pip install joblib
 
 flask --app App run --debug
