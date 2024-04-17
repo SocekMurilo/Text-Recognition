@@ -49,7 +49,7 @@ public class Segmentation
             queue.Enqueue((x, y - 1));
         }
 
-        return ((x0, y0), (xf, yf));
+        return ((x0-1, y0-1), (xf+1, yf+1));
     }
     public static unsafe void PerformSegmentation(string imagePath)
     {
@@ -70,12 +70,12 @@ public class Segmentation
                 if (imptr[img.ElementSize * (x + y * img.Width)] == 0)
                 {
                     var rect = Find(img, x, y);
-                    rects.Add(new Rectangle(rect.Item1.x, rect.Item1.y, rect.Item2.x - rect.Item1.x, rect.Item2.y - rect.Item1.y));
+                    rects.Add(new Rectangle(rect.Item1.x+1, rect.Item1.y, rect.Item2.x - rect.Item1.x, rect.Item2.y - rect.Item1.y));
                 }
 
         Mat mark = org.Clone();
         List<Mat> resizedImages = new List<Mat>();
-        List<List<Mat>> arm = new List<List<Mat>>();
+        List<List<Mat>> words = new List<List<Mat>>();
 
         int xPrevios = 0;
 
@@ -84,50 +84,46 @@ public class Segmentation
             CvInvoke.Rectangle(mark, rect, new MCvScalar(0, 255, 0), 2);
             Mat croppedImg = new Mat(org, rect);
 
-            int desiredWidth = 1200;
-            int desiredHeight = 900;
+            int width = 1200;
+            int height = 900;
 
-            Mat resizedImg = new Mat(desiredHeight, desiredWidth, croppedImg.Depth, croppedImg.NumberOfChannels);
-            
-            if (imptr[0] < 120)
-                resizedImg.SetTo(new MCvScalar(255, 255, 255));
-            else
-                resizedImg.SetTo(new MCvScalar(255, 255, 255));
+            Mat resizedImg = new Mat(height, width, croppedImg.Depth, croppedImg.NumberOfChannels);
 
-            int x = (desiredWidth - croppedImg.Width) / 2;
-            int y = (desiredHeight - croppedImg.Height) / 2;
+            resizedImg.SetTo(new MCvScalar(255, 255, 255));
+
+            int x = (int)Math.Floor((width - croppedImg.Width) / 2.0);
+            int y = (int)Math.Floor((height - croppedImg.Height) / 2.0);
 
             Mat roi = new Mat(resizedImg, new Rectangle(x, y, croppedImg.Width, croppedImg.Height));
             croppedImg.CopyTo(roi);
-            
+
             if (rect.X - xPrevios < 36)
                 resizedImages.Add(resizedImg.Clone());
-
             else 
             {
-                arm.Add(resizedImages.ToList());
+                words.Add(resizedImages.ToList());
                 resizedImages.Clear();
                 resizedImages.Add(resizedImg.Clone());
             }
 
             xPrevios = rect.X;
         }
-        arm.Add(resizedImages.ToList());
+        words.Add(resizedImages.ToList());
 
         string outputFolder = "Words";
 
         if (!Directory.Exists(outputFolder))
             Directory.CreateDirectory(outputFolder);
 
-        for (int i = 0; i < arm.Count; i++)
+        for (int i = 0; i < words.Count; i++)
         {
             string wordFolder = Path.Combine(outputFolder, $"Word_{i}");
             Directory.CreateDirectory(wordFolder);
 
-            for (int j = 0; j < arm[i].Count; j++)
+            for (int j = 0; j < words[i].Count; j++)
             {
                 string output_path = Path.Combine(wordFolder, $"crop_{j}.png");
-                arm[i][j].Save(output_path);
+                words[i][j].Save(output_path);
             }
         }
     }
