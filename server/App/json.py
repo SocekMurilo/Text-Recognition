@@ -47,14 +47,14 @@ def requisition():
 
     data = request.get_json()
 
-    # print(data)
-    img = base64_to_image(data['Image'])
+    print(data)
+    # img = base64_to_image(data['Image'])
 
-    img = np.expand_dims(img, axis=0)
+    # img = np.expand_dims(img, axis=0)
     
-    # print(img)
-    a = model.predict(img)
-    print(get_destination_folder_name(np.argmax(a)))
+    # # print(img)
+    # a = model.predict(img)
+    # print(get_destination_folder_name(np.argmax(a)))
 
     # DTC = load('../models/DTC.pkl')
     # lr = load('../models/LogisticRegression.pkl')
