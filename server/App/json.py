@@ -1,7 +1,9 @@
 import base64
 import numpy as np
-import cv2
+import cv2 as cv
 from tensorflow.keras import models
+import matplotlib.pyplot as plt
+import os
 
 from joblib import dump, load
 
@@ -13,7 +15,7 @@ from flask import (
 bp = Blueprint('json', __name__, url_prefix='/json')
 
 
-model = models.load_model("../checkpoints/testing/test_model8_93-91.keras")
+model = models.load_model("../checkpoints/testing/test_model6_94-90.keras")
 
 def base64_to_image(base64_string, target_shape=(1200, 900)):
     # Decode base64 string into bytes
@@ -23,10 +25,10 @@ def base64_to_image(base64_string, target_shape=(1200, 900)):
     nparr = np.frombuffer(image_bytes, np.uint8)
     
     # Decode the array into an image
-    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    image = cv.imdecode(nparr, cv.IMREAD_COLOR)
     
     # Resize the image to the target shape
-    resized_image = cv2.resize(image, target_shape[:2])
+    resized_image = cv.resize(image, target_shape[:2])
     
     print(resized_image.shape)
 
@@ -41,13 +43,61 @@ def get_destination_folder_name(category):
         return chr(category + 61)  # Convert to ASCII character a-z
     else:
         raise ValueError("Invalid category number")
+    
+def load_images_from_folder(folder):
+    images = []
+    for filename in os.listdir(folder):
+        img = cv.imread(os.path.join(folder,filename))
+        if img is not None:
+            images.append(img)
+    return images
+
+def count_folders(directory):
+    # Initialize a counter for folders
+    folder_count = 0
+    
+    # Iterate over items in the directory
+    for item in os.listdir(directory):
+        # Check if the item is a directory
+        if os.path.isdir(os.path.join(directory, item)):
+            folder_count += 1
+    
+    return folder_count
+
+def show(img):
+    plt.imshow(img, cmap='gray')
+    plt.show()
+    return img
+
+
 
 @bp.route('/', methods=('GET', 'POST'))
 def requisition():
 
     data = request.get_json()
+    path = "../Winforms/Words/"
+    print(os.getcwd())
+    folders = count_folders(path)
 
-    print(data)
+    data = []
+
+    for i in range(folders):
+        imgs = load_images_from_folder(f'{path}/Word_{i}/')
+        data.append(imgs)
+
+    str_result = ''
+
+    for word in data:
+        str_result = str_result + ' '
+        for letter in word:
+            # letter = cv.resize(letter, (1200, 900))
+            c = np.expand_dims(letter, axis=0)
+            
+            a = model.predict(c)
+            b = get_destination_folder_name(np.argmax(a))
+            str_result = str_result + b
+
+    # print(data)
     # img = base64_to_image(data['Image'])
 
     # img = np.expand_dims(img, axis=0)
@@ -56,16 +106,5 @@ def requisition():
     # a = model.predict(img)
     # print(get_destination_folder_name(np.argmax(a)))
 
-    # DTC = load('../models/DTC.pkl')
-    # lr = load('../models/LogisticRegression.pkl')
-    # vectonizer = load('../models/vectonizer')
-
-    # article = data['text']
-    # a = tokenizer(article)
-    # b = [a]
-    # b = vectonizer.transform(b)
-
-    # pred = DTC.predict(b)
-    # predicted = { 'predicted': int(pred[0]) }
-
-    return jsonify("Poggers")
+    return jsonify(str_result)
+    return jsonify("str_result")

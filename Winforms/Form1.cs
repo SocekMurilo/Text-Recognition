@@ -7,6 +7,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text;
+using Emgu.CV;
+using System.Collections.Generic;
+using Emgu.CV.Structure;
 
 
 public partial class MainForm : Form
@@ -14,9 +17,11 @@ public partial class MainForm : Form
     private Bitmap bitmap = null;
     private Graphics g = null;
     private int frameCount = 0;
+    private string resp = "DIGITE ALGO ALI EM CIMA E APERTE CTRL";
     private Timer timer;
     private PictureBox pb = new PictureBox { Dock = DockStyle.Fill };
     private Button btnSaveFrame = new Button { Text = "Salvar Próximo Frame", Dock = DockStyle.Bottom };
+
     private TextBox textBox = new TextBox
     {
         Dock = DockStyle.Top,
@@ -64,12 +69,15 @@ public partial class MainForm : Form
     private void Timer_Tick(object sender, EventArgs e)
     {
         g.Clear(Color.White);
+        g.DrawString(resp, SystemFonts.DefaultFont, Brushes.Black, new PointF(10, 105));
         // Captura o conteúdo do pb como um bitmap
         Rectangle rect = new Rectangle(0, 0, pb.Width, pb.Height);
         pb.DrawToBitmap(bitmap, rect);
+
+        pb.Refresh();
     }
 
-    private async void KeyboardDown(object sender, KeyEventArgs e)
+    private void KeyboardDown(object sender, KeyEventArgs e)
     {
         switch (e.KeyCode)
         {
@@ -78,7 +86,7 @@ public partial class MainForm : Form
                 break;
 
             case Keys.ControlKey:
-                await SaveNextFrameAsync();
+                SaveNextFrame();
                 break;
 
         }
@@ -91,28 +99,43 @@ public partial class MainForm : Form
 
         this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
-        string fileName = $"../../../frame_{frameCount}.png";
+        string fileName = $"../../../frame_0.png";
         screenshot.Save(fileName, ImageFormat.Png);
-        frameCount++;
+        Segmentation.PerformSegmentation(screenshot);
+
     }
 
-    private async Task SaveNextFrameAsync()
+    private async void SaveNextFrame()
     {
         Bitmap screenshot = new Bitmap(this.Width, 300);
 
         this.DrawToBitmap(screenshot, new Rectangle(0, 0, this.Width, 300));
 
-        string fileName = $"../../../frame_{0}.png";
+        string fileName = $"frame_{0}.png";
         screenshot.Save(fileName, ImageFormat.Png);
 
         // var resizedImages = Segmentation.PerformSegmentation("frame_0.png");
-        var resizedImages = Segmentation.PerformSegmentation(screenshot);
+        var KK = Segmentation.PerformSegmentation(screenshot);
 
-        var json = ImageTreat.ImgToJson("../../../Words/crop_0.png");
-        // MessageBox.Show(json);
+        // ImageLoader imageLoader = new ImageLoader();
+        // int folders = imageLoader.CountFolders("Words");
+        // List<List<Image<Gray, byte>>> data = new List<List<Image<Gray, byte>>>();
+
+        // for (int i = 0; i < folders; i++)
+        // {
+        //     List<Image<Gray, byte>> imgs = imageLoader.LoadImagesFromFolder($"Words/Word_{i}/");
+        //     data.Add(imgs);
+        // }
+        
+        // imageLoader.Show(data[0][0]);
+        // MessageBox.Show(data[0].Count.ToString());
+
+
+        var json = ImageTreat.ImgToJson("../../../frame_0.png");
+        // // MessageBox.Show(json);
 
         string apiUrl = "http://127.0.0.1:5000/json/";
-        MessageBox.Show(json);
+        // MessageBox.Show(json);
 
         try
         {
@@ -131,6 +154,7 @@ public partial class MainForm : Form
                 {
                     string responseContent = await response.Content.ReadAsStringAsync();
                     Console.WriteLine("Response from server:\n" + responseContent);
+                    resp = responseContent;
                 }
                 else
                 {
